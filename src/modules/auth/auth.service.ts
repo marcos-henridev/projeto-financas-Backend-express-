@@ -1,18 +1,14 @@
-import authRepository from "./auth.repository";
-import bcrypt from "bcrypt";
-import JWT from "jsonwebtoken";
-import dotenv from "dotenv";
+import authRepository from './auth.repository';
+import bcrypt from 'bcrypt';
+import JWT from 'jsonwebtoken';
+import dotenv from 'dotenv';
 dotenv.config();
 class AuthService {
-  register = async (data: {
-    name: string;
-    email: string;
-    passaword: string;
-  }) => {
+  register = async (data: { name: string; email: string; passaword: string }) => {
     // verificar se existe o email no banco
     const findUser = await authRepository.findUserByEmail(data.email);
     if (findUser) {
-      throw new Error("email já casdastrado");
+      throw new Error('email já casdastrado');
     }
 
     // *IMPORTANT gerar o hash de senha
@@ -28,28 +24,33 @@ class AuthService {
     return userWithoutPassaword;
   };
   ////////////////////////////// LOGIN ////////////////////////////////////
-  login = async (data: { name: string; email: string; passaword: string }) => {
+  login = async (data: { email: string; password: string }) => {
     const findUser = await authRepository.findUserByEmail(data.email);
 
     if (!findUser) {
-      throw new Error("USUARIO NAO ENCONTRADO");
+      throw new Error('USUARIO NAO ENCONTRADO');
     }
 
     //COMPARAR SENHA HASH
-    const compare = await bcrypt.compare(
-      data.passaword,
-      findUser.password_hash,
-    );
+    const compare = await bcrypt.compare(data.password, findUser.password_hash);
 
     //GERA O JWT
-    const token = JWT.sign(
-      { signId: findUser.id },
-      process.env.JWT_SECRET as string,
-      { expiresIn: "1d" },
-    );
+    const token = JWT.sign({ signId: findUser.id }, process.env.JWT_SECRET as string, {
+      expiresIn: '1d',
+    });
     // *retornando sempre os dados sem a senha e dessa vez com  o tokem
     const { password_hash, ...userWithoutPassaword } = findUser;
     return { userWithoutPassaword, token };
+  };
+  ///////////////////////////////UPDATE//////////////////////////////////////
+  update = async (data: { name?: string; email?: string; userId: string }) => {
+    const updatedUser = await authRepository.updateUser({
+      id: data.userId,
+      name: data.name,
+      email: data.email,
+    });
+    const { password_hash, ...userWithoutPassword } = updatedUser;
+    return userWithoutPassword;
   };
 }
 
