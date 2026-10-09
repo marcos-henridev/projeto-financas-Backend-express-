@@ -24,7 +24,7 @@ class AuthService {
     return userWithoutPassaword;
   };
   ////////////////////////////// LOGIN ////////////////////////////////////
-  login = async (data: { email: string; password: string }) => {
+  login = async (data: { email: string; passaword: string }) => {
     const findUser = await authRepository.findUserByEmail(data.email);
 
     if (!findUser) {
@@ -32,7 +32,7 @@ class AuthService {
     }
 
     //COMPARAR SENHA HASH
-    const compare = await bcrypt.compare(data.password, findUser.password_hash);
+    const compare = await bcrypt.compare(data.passaword, findUser.password_hash);
 
     //GERA O JWT
     const token = JWT.sign({ signId: findUser.id }, process.env.JWT_SECRET as string, {
@@ -43,15 +43,6 @@ class AuthService {
     return { userWithoutPassaword, token };
   };
   ///////////////////////////////UPDATE//////////////////////////////////////
-  update = async (data: { name?: string; email?: string; userId: string }) => {
-    const updatedUser = await authRepository.updateUser({
-      id: data.userId,
-      name: data.name,
-      email: data.email,
-    });
-    const { password_hash, ...userWithoutPassword } = updatedUser;
-    return userWithoutPassword;
-  };
 }
 
 export const authService = new AuthService();

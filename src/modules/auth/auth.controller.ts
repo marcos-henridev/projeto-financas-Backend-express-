@@ -19,28 +19,13 @@ class AuthController {
     }
   };
 
-  updateUserUnique = async (req: Request, res: Response) => {
-    try {
-      const { name, email } = req.body;
-      const NewUpdate = await authService.update({
-        name,
-        email,
-        userId: req.userId,
-      });
-      res.status(200).json(NewUpdate);
-    } catch (error) {
-      console.error(`Error: ${error}`);
-      return res.status(401).json({ erro: 'Erro ao atualizar usuario' });
-    }
-  };
-
   enterLogin = async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { email, passaword } = req.body;
 
       if (!email) return res.status(404).json({ mensagem: 'insira um email' });
 
-      const result = await authService.login({ email, password });
+      const result = await authService.login({ email, passaword });
       res.status(200).json(result);
     } catch (erro) {
       console.error(`Error: ${erro}`);
