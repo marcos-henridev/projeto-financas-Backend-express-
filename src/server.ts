@@ -1,7 +1,7 @@
 import express from 'express';
 import authRouter from './modules/auth/auth.routes';
-import userController from './modules/users/user.controller';
-import userRouter from './modules/users/user.router';
+
+import userRouter from './modules/user/user.router';
 import validation from './midllewares/auth.midleware';
 
 const app = express();

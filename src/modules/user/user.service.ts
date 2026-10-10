@@ -18,6 +18,10 @@ class UserService {
     const { password_hash, ...userWithoutPasswored } = user;
     return userWithoutPasswored;
   };
+  deleteId = async (id: string) => {
+    const userDel = await userRepository.deleteMe(id);
+    return userDel;
+  };
 }
 
 const userService = new UserService();

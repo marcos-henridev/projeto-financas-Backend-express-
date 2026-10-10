@@ -3,7 +3,7 @@ import { prisma } from '../../prisma';
 
 class AuthRepository {
   findUserByEmail = async (email: string) => {
-    return prisma.users.findUnique({ where: { email } });
+    return prisma.users.findFirst({ where: { email, deleted_at: null } });
   };
 
   createUser = async (data: { name: string; email: string; password_hash: string }) => {
