@@ -63,18 +63,31 @@ schema do Prisma, mas ainda não têm rotas.
    npm run dev
    ```
 
-   O servidor escuta na porta `3333`. Para verificar o cadastro, envie uma
-   requisição para `http://localhost:3333/auth/register`.
+   O servidor escuta na porta `3000`. Para verificar o cadastro, envie uma
+   requisição para `http://localhost:3000/auth/register`.
 
 ## Rotas disponíveis
 
-| Método | Caminho          | Descrição           |
-| ------ | ---------------- | ------------------- |
-| `POST` | `/auth/register` | Cadastra um usuário |
+O servidor está com as rotas abaixo registradas no `src/server.ts`. Todas as
+rotas de `/users` e `/account` exigem autenticação do middleware
+`validation`.
+
+| Método | Caminho | Descrição |
+| ------ | ------- | --------- |
+| `POST` | `/auth/register` | Cadastra um novo usuário |
+| `POST` | `/auth/login` | Realiza login do usuário |
+| `GET` | `/users/me` | Retorna os dados do usuário autenticado |
+| `PATCH` | `/users/me` | Atualiza dados do usuário autenticado |
+| `DELETE` | `/users/me` | Desativa/soft delete do usuário autenticado |
+| `GET` | `/account` | Lista contas do usuário autenticado |
+| `POST` | `/account` | Cria uma nova conta para o usuário autenticado |
+| `GET` | `/account/:id` | Busca uma conta específica do usuário autenticado |
+| `PATCH` | `/account/:id` | Atualiza uma conta específica |
+| `DELETE` | `/account/:id` | Remove uma conta específica |
 
 ### `POST /auth/register`
 
-Corpo JSON esperado pela implementação atual:
+Corpo esperado:
 
 ```json
 {
@@ -84,41 +97,74 @@ Corpo JSON esperado pela implementação atual:
 }
 ```
 
-> **Atenção:** o campo está escrito `passaword` no código atual. Use essa
-> grafia na requisição até que o nome seja corrigido na API.
+### `POST /auth/login`
 
-Em caso de sucesso, a rota responde com status `201` e os dados do usuário,
-sem o hash da senha. Erros são tratados pelo controller e respondem com status
-`500`; no momento, isso inclui também a tentativa de cadastrar um e-mail já
-existente.
+Corpo esperado:
 
-O serviço contém lógica de login, mas ainda não há controller/rota HTTP de
-login registrada.
+```json
+{
+  "email": "maria@example.com",
+  "passaword": "uma-senha-segura"
+}
+```
+
+### `GET /users/me` / `PATCH /users/me` / `DELETE /users/me`
+
+Rotas protegidas, acessíveis somente com token JWT válido enviado no header de
+autorização do usuário.
+
+### `GET /account` / `POST /account`
+
+Rotas protegidas para listagem e criação de contas:
+
+```json
+{
+  "name": "Conta Corrente",
+  "kind": "checking",
+  "initial_balance": 1500.5
+}
+```
+
+### `GET /account/:id` / `PATCH /account/:id` / `DELETE /account/:id`
+
+Rotas protegidas para leitura, atualização e exclusão da conta por `id`.
 
 ## Estrutura de pastas
 
 ```text
 .
 ├── prisma/
-│   └── schema.prisma              # Modelos e enums do banco
+│   └── schema.prisma                     # Modelos e enums do banco
 ├── src/
+│   ├── midllewares/
+│   │   └── auth.midleware.ts            # Validação de token JWT
 │   ├── modules/
-│   │   └── auth/
-│   │       ├── auth.routes.ts     # Rotas de autenticação
-│   │       ├── auth.controller.ts# Entrada HTTP e respostas
-│   │       ├── auth.service.ts   # Regras de cadastro e login
-│   │       └── auth.repository.ts# Consultas e gravações via Prisma
-│   ├── prisma.ts                  # Cliente Prisma e adapter PostgreSQL
-│   └── server.ts                  # Configuração e inicialização do Express
-├── prisma7.config.ts              # Configuração do Prisma CLI
-├── tsconfig.json                  # Configuração do TypeScript
-├── package.json                   # Dependências e scripts npm
-└── .env                           # Configuração local (não versionada)
+│   │   ├── auth/
+│   │   │   ├── auth.routes.ts           # Rotas de autenticação
+│   │   │   ├── auth.controller.ts       # Entrada HTTP e respostas
+│   │   │   ├── auth.service.ts          # Regras de cadastro e login
+│   │   │   └── auth.repository.ts       # Consultas e gravações via Prisma
+│   │   ├── user/
+│   │   │   ├── user.router.ts           # Rotas do perfil do usuário
+│   │   │   ├── user.controller.ts       # Lógica HTTP do usuário
+│   │   │   ├── user.service.ts          # Regras de negócio do usuário
+│   │   │   └── user.repository.ts       # Consultas via Prisma
+│   │   └── accounts/
+│   │       ├── accounts.router.ts      # Rotas de contas
+│   │       ├── accounts.controller.ts   # Lógica HTTP de contas
+│   │       ├── accounts.service.ts      # Regras de negócio das contas
+│   │       └── accounts.repository.ts  # Consultas via Prisma
+│   ├── prisma.ts                       # Cliente Prisma e adapter PostgreSQL
+│   └── server.ts                       # Configuração e inicialização do Express
+├── prisma7.config.ts                   # Configuração do Prisma CLI
+├── tsconfig.json                       # Configuração do TypeScript
+├── package.json                        # Dependências e scripts npm
+└── .env                                # Configuração local (não versionada)
 ```
 
 O schema define usuários, contas, categorias, transações e categorias de
-transação. Até o momento, apenas o cadastro de usuários está exposto por uma
-rota HTTP.
+transação. O backend atual expõe autenticação, dados do usuário e gerenciamento
+de contas por rotas HTTP.
 
 ## Scripts npm
 
