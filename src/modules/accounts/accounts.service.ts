@@ -33,6 +33,67 @@ class AccountService {
     });
     return accounts;
   };
+  findAll = async (userId: string) => {
+    return accountRepository.findAccountsMany(userId);
+  };
+  findAccountUrl = async (id: string, userId: string) => {
+    const accountUrl = await accountRepository.findByIdAndUser({
+      id,
+      userId,
+    });
+    if (!accountUrl) throw new Error('conta nao encontrada');
+    return accountUrl;
+  };
+  deletedAccount = async (id: string, userId: string) => {
+    //*Importante validação da existencia da conta
+    const find = await accountRepository.findByIdAndUser({ id, userId });
+
+    if (!find) throw new Error('Account notfound');
+
+    const deleted = await accountRepository.deleteAccount({
+      id,
+      userId,
+    });
+    return deleted;
+  };
+  update = async (data: { id: string; userId: string; kind?: string; name?: string }) => {
+    const accountUrl = await accountRepository.findByIdAndUser({
+      id: data.id,
+      userId: data.userId,
+    });
+    if (!accountUrl) throw new Error('conta nao encontrada');
+
+    let name: string | undefined;
+    if (data.name) {
+      name = data.name.trim();
+      if (!name) {
+        throw new Error('Nome da conta não pode ser vazio');
+      }
+    }
+
+    if (data.kind) {
+      if (!VALID_KINDS.includes(data.kind as AccountKind))
+        throw new Error('Invalid account type value');
+    }
+
+    const finalName = name ?? accountUrl.name;
+    const finalKind = (data.kind as AccountKind | undefined) ?? accountUrl.kind;
+
+    const duplicate = await accountRepository.findAccountById({
+      user_id: data.userId,
+      name: finalName,
+      kind: finalKind,
+    });
+    if (duplicate) throw new Error('Você já possui uma conta com esses dados');
+
+    const modifyer = await accountRepository.updateAccount({
+      id: data.id,
+      userId: data.userId,
+      kind: data.kind as AccountKind | undefined,
+      name,
+    });
+    return modifyer;
+  };
 }
 const accountService = new AccountService();
 export default accountService;
