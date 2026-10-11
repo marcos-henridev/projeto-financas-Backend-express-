@@ -1,9 +1,8 @@
 # API de Finanças
 
 API backend para uma aplicação de finanças pessoais, construída com Node.js,
-TypeScript, Express e PostgreSQL. Atualmente, o endpoint HTTP implementado é o
-de cadastro de usuário; as demais entidades do banco já estão descritas no
-schema do Prisma, mas ainda não têm rotas.
+TypeScript, Express e PostgreSQL. O projeto já expõe autenticação, dados do
+usuário e gerenciamento de contas por rotas HTTP.
 
 ## Tecnologias
 
