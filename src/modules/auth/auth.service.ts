@@ -14,7 +14,7 @@ class AuthService {
     // *IMPORTANT gerar o hash de senha
     const hash = await bcrypt.hash(data.passaword, 10);
     //*criando o usuário
-    const user = await authRepository.createUser({
+    const user = await authRepository.createUserWithDefaults({
       name: data.name,
       email: data.email,
       password_hash: hash,
