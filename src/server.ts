@@ -4,6 +4,7 @@ import userRouter from './modules/user/user.router';
 import validation from './midllewares/auth.midleware';
 import accountRouter from './modules/accounts/accounts.router';
 import categorieRouter from './modules/categories/categories.router';
+import transactionRouter from './modules/transacations/transactions.router';
 
 const app = express();
 app.use(express.json());
@@ -13,6 +14,7 @@ app.use('/auth', authRouter);
 app.use('/users', validation, userRouter);
 app.use('/account', validation, accountRouter);
 app.use('/categories', validation, categorieRouter);
+app.use('/transaction', validation, transactionRouter);
 
 app.listen(PORT, () => {
   console.log(`servidor iniciado na porta ${PORT}`);
