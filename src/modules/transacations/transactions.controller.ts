@@ -1,7 +1,51 @@
 import { type Request, type Response } from 'express';
 import transactionService from './transactions.service';
+import { account_kind } from '../../../generated/prisma/enums';
+import { kindTransaction } from './transactions.repository';
 
 class TransactionController {
+  DeleteTransaction = async (req: Request<{ id: string }>, res: Response) => {
+    try {
+      const { id } = req.params;
+      const result = await transactionService.DeletedTransaction({
+        id,
+        user_id: req.userId,
+      });
+      res.status(204).send();
+    } catch (erro) {
+      res.status(500).json({
+        erro: erro instanceof Error ? erro.message : 'Erro no servidor',
+      });
+    }
+  };
+
+  Get = async (req: Request<{ id: string }>, res: Response) => {
+    try {
+      const { id } = req.params;
+      const result = await transactionService.GetUnique(req.userId, id);
+      res.status(200).json(result);
+    } catch (erro) {
+      res.status(400).json(erro);
+    }
+  };
+
+  GetAll = async (req: Request, res: Response) => {
+    try {
+      const { id, account_id, kind, status, from, to } = req.query;
+      const result = await transactionService.GetAll({
+        user_id: req.userId,
+        id: typeof id === 'string' ? id : undefined,
+        account_id: typeof account_id === 'string' ? account_id : undefined,
+        kind: typeof kind === 'string' ? kind : undefined,
+        status: typeof status === 'string' ? status : undefined,
+        from: typeof from === 'string' ? from : undefined,
+        to: typeof to === 'string' ? to : undefined,
+      });
+      res.status(200).json(result);
+    } catch (erro) {
+      res.status(400).json(erro);
+    }
+  };
   create = async (req: Request, res: Response) => {
     try {
       const {

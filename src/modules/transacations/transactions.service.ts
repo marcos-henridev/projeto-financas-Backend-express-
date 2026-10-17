@@ -5,10 +5,86 @@ import transactionsRepository, {
 } from './transactions.repository';
 import categoriesRepository from '../categories/categories.repository';
 
-const VALID_KINDS = ['receita', 'despesa', 'tranferencia'];
+const VALID_KINDS = ['receita', 'despesa', 'transferencia'];
 const VALID_STATUS = ['pendente', 'pago', 'vencido', 'cancelado'];
 
 class TransactionService {
+  DeletedTransaction = async (data: { id: string; user_id: string }) => {
+    const existTransaction = await transactionsRepository.getAllTransactions({
+      user_id: data.user_id,
+      id: data.id,
+    });
+    if (existTransaction.length === 0) throw new Error('Transaction NotFound');
+
+    // grava o objeto
+    const transaction = await transactionsRepository.Deleted({
+      id: data.id,
+      user_id: data.user_id,
+    });
+
+    return transaction;
+  };
+
+  GetUnique = async (user_id: string, id?: string) => {
+    const uniqueTransiction = await transactionsRepository.getAllTransactions({
+      user_id: user_id,
+      id: id,
+    });
+    if (!uniqueTransiction) {
+      throw new Error('Categoria não encontrada');
+    }
+    return uniqueTransiction;
+  };
+
+  GetAll = async (data: {
+    user_id: string;
+    id?: string;
+    account_id?: string;
+    kind?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+  }) => {
+    let kind: kindTransaction | undefined;
+    let status: statusTransaction | undefined;
+
+    //validation Kind
+    if (data.kind) {
+      kind = data.kind as kindTransaction;
+      if (!VALID_KINDS.includes(kind)) throw new Error('Tipo inválido');
+    }
+
+    //validation status
+    if (data.status) {
+      status = data.status as statusTransaction;
+      if (!VALID_STATUS.includes(status)) throw new Error('Tipo inválido');
+    }
+
+    // validation account
+    const account = await accountRepository.findByIdAndUser({
+      id: data.account_id as string,
+      userId: data.user_id,
+    });
+    if (!account) throw new Error('Conta não existe');
+
+    //validation from e to (De - Até)
+    const from = data.from ? new Date(data.from) : undefined;
+    const to = data.to ? new Date(data.to) : undefined;
+    if (from && Number.isNaN(from.getTime())) throw new Error('Data inválida');
+    if (to && Number.isNaN(to.getTime())) throw new Error('Data inválida');
+    if (from && to && from > to) throw new Error('Data inicial não pode ser maior que data final');
+
+    const transaction = await transactionsRepository.getAllTransactions({
+      user_id: data.user_id,
+      id: data.id as string,
+      account_id: data.account_id,
+      kind,
+      status,
+      from,
+      to,
+    });
+    return transaction;
+  };
   create = async (data: {
     user_id: string;
 
@@ -21,7 +97,7 @@ class TransactionService {
     due_date?: Date;
     amount: number;
   }) => {
-    //1) description
+    // 1) description
     const description = data.description;
     if (!description) throw new Error('Descrição é obrigatoria');
     if (description.length > 255) throw new Error('Descrição muito longa');
