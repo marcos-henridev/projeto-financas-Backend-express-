@@ -1,9 +1,34 @@
 import { type Request, type Response } from 'express';
 import transactionService from './transactions.service';
-import { account_kind } from '../../../generated/prisma/enums';
-import { kindTransaction } from './transactions.repository';
+import debug from 'debug';
+
+// Cria a instância com a etiqueta
+const log = debug('app:router:transactions');
 
 class TransactionController {
+  NewUpdate = async (req: Request<{ id: string }>, res: Response) => {
+    try {
+      log('entrou no controller de transactions update');
+
+      // id da transação
+      const { id } = req.params;
+      const { category_id, description, due_date } = req.body;
+
+      log('Body recebido %o', req.body);
+      const result = await transactionService.editPatch({
+        id,
+        user_id: req.userId,
+        description,
+        category_id,
+        due_date,
+      });
+      res.status(200).json(result);
+    } catch (erro) {
+      log('Deu erro no catch: %s', erro);
+      res.status(400).json({ erro: erro instanceof Error ? erro.message : 'Erro na requisição' });
+    }
+  };
+
   DeleteTransaction = async (req: Request<{ id: string }>, res: Response) => {
     try {
       const { id } = req.params;

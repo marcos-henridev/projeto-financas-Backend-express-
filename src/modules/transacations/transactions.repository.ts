@@ -5,9 +5,30 @@ import { account_kind } from '../../../generated/prisma/enums';
 export type kindTransaction = 'receita' | 'despesa' | 'transferencia';
 export type statusTransaction = 'pendente' | 'pago' | 'vencido' | 'cancelado';
 class TransactionsRepository {
-  // findUnique = async ()=>{
-  //   return prisma.
-  // }
+  findUserById = async (data: { id: string; user_id: string }) => {
+    return prisma.transactions.findFirst({
+      where: {
+        id: data.id,
+        user_id: data.user_id,
+      },
+    });
+  };
+  Patch = async (data: {
+    id: string;
+    user_id: string;
+    category_id?: string;
+    due_date?: Date;
+    description?: string;
+  }) => {
+    return prisma.transactions.update({
+      where: { id: data.id, user_id: data.user_id, deleted_at: null },
+      data: {
+        category_id: data.category_id,
+        due_date: data.due_date,
+        description: data.description,
+      },
+    });
+  };
   Deleted = async (data: { id: string; user_id: string }) => {
     return prisma.$transaction(async (tx) => {
       const transaction = await tx.transactions.update({

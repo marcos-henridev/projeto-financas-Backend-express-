@@ -6,6 +6,7 @@ transactionRouter.route('/').post(transactionController.create).get(transactionC
 transactionRouter
   .route('/:id')
   .get(transactionController.Get)
-  .delete(transactionController.DeleteTransaction);
+  .delete(transactionController.DeleteTransaction)
+  .patch(transactionController.NewUpdate);
 
 export default transactionRouter;

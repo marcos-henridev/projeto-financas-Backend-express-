@@ -1,15 +1,19 @@
 {
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "formater": "prettier . --write"
+    "formater": "prettier . --write",
+    "debug": "DEBUG=router:* npx tsx src/server.ts ",
+    "debugTransaction": "DEBUG=app:router:transactions npx tsx src/modules/transacations/transactions.controller.ts"
   },
   "type": "module",
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
+    "@types/debug": "^4.1.13",
     "@types/express": "^5.0.6",
     "@types/node": "^26.6.4",
     "bcrypt": "^6.0.0",
+    "debug": "^4.4.3",
     "dotenv": "^18.0.5",
     "eslint-config-prettier": "^10.1.8",
     "express": "^5.2.1",

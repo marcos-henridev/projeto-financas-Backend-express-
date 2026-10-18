@@ -4,11 +4,62 @@ import transactionsRepository, {
   statusTransaction,
 } from './transactions.repository';
 import categoriesRepository from '../categories/categories.repository';
+import console, { log } from 'node:console';
 
 const VALID_KINDS = ['receita', 'despesa', 'transferencia'];
 const VALID_STATUS = ['pendente', 'pago', 'vencido', 'cancelado'];
 
 class TransactionService {
+  editPatch = async (data: {
+    id: string;
+    user_id: string;
+    category_id?: string;
+    due_date?: string;
+    description?: string;
+  }) => {
+    let description;
+    if (data.description) {
+      description = data.description;
+      if (description.length > 255) throw new Error('tamanho da descrição inválida');
+    }
+    //validando a transação
+    const transaction = await transactionsRepository.findUserById({
+      user_id: data.user_id,
+      id: data.id,
+    });
+    if (!transaction) throw new Error('transação não encontrada');
+
+    if (transaction.kind === 'transferencia') {
+      if (data.category_id) {
+        throw new Error('nao pode editar categoria com o tipo transferencia');
+      }
+    }
+
+    console.log('entrando em processamento');
+    if (data.category_id) {
+      const category = await categoriesRepository.categorieUserExist({
+        id: data.category_id as string,
+        userId: data.user_id,
+      });
+      if (!category) throw new Error('Categoria não existe');
+      if (category.kind !== transaction.kind) {
+        throw new Error('tipo da categoria tem que ser a mesma da transação');
+      }
+    }
+
+    //validação da data
+    const due_date = data.due_date ? new Date(data.due_date) : undefined;
+    if (due_date && Number.isNaN(due_date.getTime())) throw new Error('Data inválida');
+
+    const update = await transactionsRepository.Patch({
+      id: data.id,
+      user_id: data.user_id,
+      category_id: data.category_id,
+      due_date,
+    });
+
+    return update;
+  };
   DeletedTransaction = async (data: { id: string; user_id: string }) => {
     const existTransaction = await transactionsRepository.getAllTransactions({
       user_id: data.user_id,

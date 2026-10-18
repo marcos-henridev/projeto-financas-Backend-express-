@@ -37,6 +37,7 @@ class CategoiesRepository {
   findCategorie = async (data: { id?: string; kind?: string; name?: string; userId: string }) => {
     return prisma.categories.findFirst({
       where: {
+        id: data.id,
         name: { equals: data.name, mode: 'insensitive' },
         user_id: data.userId,
         kind: data.kind as categorieKind,
