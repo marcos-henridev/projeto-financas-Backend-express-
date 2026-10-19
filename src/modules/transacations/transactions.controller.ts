@@ -1,11 +1,26 @@
 import { type Request, type Response } from 'express';
 import transactionService from './transactions.service';
 import debug from 'debug';
+import { Result } from 'pg';
 
 // Cria a instância com a etiqueta
 const log = debug('app:router:transactions');
 
 class TransactionController {
+  transctionPaid_at = async (req: Request<{ id: string }>, res: Response) => {
+    try {
+      const { id } = req.params;
+      const result = await transactionService.addPaid_at({
+        user_id: req.userId,
+        id_transaction: id,
+      });
+      res.status(200).json(result);
+    } catch (err) {
+      res.status(400).json({
+        erro: err instanceof Error ? err.message : 'Falha no servidor',
+      });
+    }
+  };
   NewUpdate = async (req: Request<{ id: string }>, res: Response) => {
     try {
       log('entrou no controller de transactions update');

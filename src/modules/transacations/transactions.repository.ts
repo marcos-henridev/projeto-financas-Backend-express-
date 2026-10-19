@@ -5,11 +5,59 @@ import { account_kind } from '../../../generated/prisma/enums';
 export type kindTransaction = 'receita' | 'despesa' | 'transferencia';
 export type statusTransaction = 'pendente' | 'pago' | 'vencido' | 'cancelado';
 class TransactionsRepository {
+  addPaid_at = async (data: { user_id: string; id: string }) => {
+    return prisma.$transaction(async (tx) => {
+      const transaction = await tx.transactions.update({
+        where: {
+          id: data.id,
+          user_id: data.user_id,
+          status: 'pendente',
+        },
+        data: {
+          status: 'pago',
+          updated_at: new Date(),
+          paid_at: new Date(),
+        },
+      });
+
+      // mexer na conta de enviou a quantia
+      await tx.accounts.update({
+        where: {
+          id: transaction.account_id,
+          user_id: data.user_id,
+          deleted_at: null,
+        },
+        data: {
+          updated_at: new Date(),
+          current_balance:
+            transaction.kind === 'receita'
+              ? { increment: transaction.amount }
+              : { decrement: transaction.amount },
+        },
+      });
+      // mexer na conta destino
+      if (transaction.kind === 'transferencia') {
+        await tx.accounts.update({
+          where: {
+            id: transaction.destination_account_id as string,
+            user_id: data.user_id,
+            deleted_at: null,
+          },
+          data: {
+            updated_at: new Date(),
+            current_balance: { increment: transaction.amount },
+          },
+        });
+      }
+      return transaction;
+    });
+  };
   findUserById = async (data: { id: string; user_id: string }) => {
     return prisma.transactions.findFirst({
       where: {
         id: data.id,
         user_id: data.user_id,
+        deleted_at: null,
       },
     });
   };

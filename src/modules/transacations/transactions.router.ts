@@ -9,4 +9,6 @@ transactionRouter
   .delete(transactionController.DeleteTransaction)
   .patch(transactionController.NewUpdate);
 
+transactionRouter.route('/:id/pay').patch(transactionController.transctionPaid_at);
+
 export default transactionRouter;

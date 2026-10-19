@@ -5,11 +5,31 @@ import transactionsRepository, {
 } from './transactions.repository';
 import categoriesRepository from '../categories/categories.repository';
 import console, { log } from 'node:console';
+import { transaction_kind } from '../../../generated/prisma/enums';
 
 const VALID_KINDS = ['receita', 'despesa', 'transferencia'];
 const VALID_STATUS = ['pendente', 'pago', 'vencido', 'cancelado'];
 
 class TransactionService {
+  addPaid_at = async (data: { user_id: string; id_transaction: string }) => {
+    const transaction = data.id_transaction;
+
+    const findTransaction = await transactionsRepository.findUserById({
+      id: transaction,
+      user_id: data.user_id,
+    });
+    if (!findTransaction) throw new Error('transação não encontrada');
+
+    if (findTransaction.status === 'pendente') {
+      const transactionPaid = await transactionsRepository.addPaid_at({
+        user_id: data.user_id,
+        id: transaction,
+      });
+      return transactionPaid;
+    } else {
+      throw new Error('A transação é de transferencia');
+    }
+  };
   editPatch = async (data: {
     id: string;
     user_id: string;
