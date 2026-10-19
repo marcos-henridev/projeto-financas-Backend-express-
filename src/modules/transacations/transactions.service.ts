@@ -39,7 +39,7 @@ class TransactionService {
   }) => {
     let description;
     if (data.description) {
-      description = data.description;
+      description = data.description.trim();
       if (description.length > 255) throw new Error('tamanho da descrição inválida');
     }
     //validando a transação
@@ -55,7 +55,6 @@ class TransactionService {
       }
     }
 
-    console.log('entrando em processamento');
     if (data.category_id) {
       const category = await categoriesRepository.categorieUserExist({
         id: data.category_id as string,

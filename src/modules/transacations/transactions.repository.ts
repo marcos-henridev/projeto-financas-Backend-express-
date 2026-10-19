@@ -74,6 +74,7 @@ class TransactionsRepository {
         category_id: data.category_id,
         due_date: data.due_date,
         description: data.description,
+        updated_at: new Date(),
       },
     });
   };
