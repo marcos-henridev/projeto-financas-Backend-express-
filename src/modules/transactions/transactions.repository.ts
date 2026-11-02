@@ -182,6 +182,7 @@ class TransactionsRepository {
           description: data.description,
           amount: data.amount,
           due_date: data.due_date,
+          paid_at: isPaid ? new Date() : null,
         },
       });
 
