@@ -1,4 +1,3 @@
-import { SignatureUsage } from 'typescript/unstable/sync';
 import { prisma } from '../../prisma';
 import { account_kind } from '../../../generated/prisma/enums';
 

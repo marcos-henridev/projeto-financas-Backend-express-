@@ -1,4 +1,5 @@
 import userRepository from './user.repository';
+import { AppError } from '../../errors/AppError';
 
 class UserService {
   updateUser = async (data: { userId: string; name?: string; email?: string }) => {
@@ -13,7 +14,7 @@ class UserService {
   getMe = async (id: string) => {
     const user = await userRepository.findUserId({ id });
     if (!user) {
-      throw new Error('Usuario nao encontrado');
+      throw new AppError('User not found', 404);
     }
     const { password_hash, ...userWithoutPasswored } = user;
     return userWithoutPasswored;

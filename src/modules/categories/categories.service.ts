@@ -1,5 +1,8 @@
 import categoriesRepository, { type categorieKind } from '../categories/categories.repository';
 import { Result } from 'pg';
+import transactionsRepository from '../transactions/transactions.repository';
+import { prisma } from '../../prisma';
+import { AppError } from '../../errors/AppError';
 
 const VALIDATION_KIND = ['receita', 'despesa'];
 class CategoriesService {
@@ -9,7 +12,17 @@ class CategoriesService {
       userId: user_id,
     });
 
-    if (!existForDelet) throw new Error('categorie notfound');
+    if (!existForDelet) throw new AppError('Category not found', 404);
+
+    const transactionCategory = await prisma.transactions.findFirst({
+      where: {
+        category_id: id,
+        user_id: user_id,
+        deleted_at: null,
+      },
+    });
+    if (transactionCategory)
+      throw new AppError('Category is used by one or more transactions', 409);
 
     const result = await categoriesRepository.delete(id, user_id);
     return result;
@@ -19,14 +32,14 @@ class CategoriesService {
       id: data.id,
       user_id: data.user_id,
     });
-    if (getUniqueCat.length === 0) throw new Error('Categoria inexistente');
+    if (getUniqueCat.length === 0) throw new AppError('Category not found', 404);
 
     return getUniqueCat;
   };
 
   getAllCategories = async (user_id: string) => {
     const returnGet = await categoriesRepository.findAllCategories({ user_id });
-    if (returnGet.length === 0) throw new Error('Categorias inexistentes');
+    if (returnGet.length === 0) throw new AppError('No categories found', 404);
     return returnGet;
   };
 
@@ -41,7 +54,7 @@ class CategoriesService {
       id: data.id,
       userId: data.userId,
     });
-    if (!existCategorie) throw new Error('categorie notfound');
+    if (!existCategorie) throw new AppError('Category not found', 404);
 
     let name: string | undefined;
     if (data.name !== undefined) {
@@ -51,7 +64,7 @@ class CategoriesService {
         userId: data.userId,
         kind: existCategorie.kind,
       });
-      if (findCategory) throw new Error('Categorie exist');
+      if (findCategory) throw new AppError('Category already exists', 409);
     }
 
     const updateNewUnique = await categoriesRepository.update({
@@ -74,18 +87,18 @@ class CategoriesService {
     const name = data.name.trim();
 
     if (!name) {
-      throw new Error('Proprieda nome é obrigatoria');
+      throw new AppError('Name is required', 400);
     }
 
     if (!VALIDATION_KIND.includes(data.kind as categorieKind)) {
-      throw new Error('tipo de categoria não aceito');
+      throw new AppError('Invalid category kind', 400);
     }
     const findCategory = await categoriesRepository.findCategorie({
       kind: data.kind as categorieKind,
       userId: data.userId,
       name: name,
     });
-    if (findCategory) throw new Error('categoria com esse tipo já existe');
+    if (findCategory) throw new AppError('Category already exists', 409);
 
     const createNewCategory = await categoriesRepository.create({
       userId: data.userId,

@@ -6,6 +6,7 @@ import transactionsRepository, {
 import categoriesRepository from '../categories/categories.repository';
 import console, { log } from 'node:console';
 import { transaction_kind } from '../../../generated/prisma/enums';
+import { AppError } from '../../errors/AppError';
 
 const VALID_KINDS = ['receita', 'despesa', 'transferencia'];
 const VALID_STATUS = ['pendente', 'pago', 'vencido', 'cancelado'];
@@ -18,7 +19,7 @@ class TransactionService {
       id: transaction,
       user_id: data.user_id,
     });
-    if (!findTransaction) throw new Error('transação não encontrada');
+    if (!findTransaction) throw new AppError('Transaction not found', 404);
 
     if (findTransaction.status === 'pendente') {
       const transactionPaid = await transactionsRepository.addPaid_at({
@@ -27,7 +28,7 @@ class TransactionService {
       });
       return transactionPaid;
     } else {
-      throw new Error('A transação é de transferencia');
+      throw new AppError('Only pending transactions can be paid', 400);
     }
   };
   editPatch = async (data: {
@@ -40,18 +41,19 @@ class TransactionService {
     let description;
     if (data.description) {
       description = data.description.trim();
-      if (description.length > 255) throw new Error('tamanho da descrição inválida');
+      if (description.length > 255)
+        throw new AppError('Description must be at most 255 characters', 400);
     }
     //validando a transação
     const transaction = await transactionsRepository.findUserById({
       user_id: data.user_id,
       id: data.id,
     });
-    if (!transaction) throw new Error('transação não encontrada');
+    if (!transaction) throw new AppError('Transaction not found', 404);
 
     if (transaction.kind === 'transferencia') {
       if (data.category_id) {
-        throw new Error('nao pode editar categoria com o tipo transferencia');
+        throw new AppError('Cannot set a category on a transfer transaction', 400);
       }
     }
 
@@ -60,15 +62,15 @@ class TransactionService {
         id: data.category_id as string,
         userId: data.user_id,
       });
-      if (!category) throw new Error('Categoria não existe');
+      if (!category) throw new AppError('Category not found', 404);
       if (category.kind !== transaction.kind) {
-        throw new Error('tipo da categoria tem que ser a mesma da transação');
+        throw new AppError('Category kind must match the transaction kind', 400);
       }
     }
 
     //validação da data
     const due_date = data.due_date ? new Date(data.due_date) : undefined;
-    if (due_date && Number.isNaN(due_date.getTime())) throw new Error('Data inválida');
+    if (due_date && Number.isNaN(due_date.getTime())) throw new AppError('Invalid date', 400);
 
     const update = await transactionsRepository.Patch({
       id: data.id,
@@ -84,7 +86,7 @@ class TransactionService {
       user_id: data.user_id,
       id: data.id,
     });
-    if (existTransaction.length === 0) throw new Error('Transaction NotFound');
+    if (existTransaction.length === 0) throw new AppError('Transaction not found', 404);
 
     // grava o objeto
     const transaction = await transactionsRepository.Deleted({
@@ -100,9 +102,8 @@ class TransactionService {
       user_id: user_id,
       id: id,
     });
-    if (!uniqueTransiction) {
-      throw new Error('Categoria não encontrada');
-    }
+    if (uniqueTransiction.length === 0) throw new AppError('Transaction not found', 404);
+
     return uniqueTransiction;
   };
 
@@ -121,13 +122,13 @@ class TransactionService {
     //validation Kind
     if (data.kind) {
       kind = data.kind as kindTransaction;
-      if (!VALID_KINDS.includes(kind)) throw new Error('Tipo inválido');
+      if (!VALID_KINDS.includes(kind)) throw new AppError('Invalid transaction kind', 400);
     }
 
     //validation status
     if (data.status) {
       status = data.status as statusTransaction;
-      if (!VALID_STATUS.includes(status)) throw new Error('Tipo inválido');
+      if (!VALID_STATUS.includes(status)) throw new AppError('Invalid transaction kind', 400);
     }
 
     // validation account
@@ -135,14 +136,14 @@ class TransactionService {
       id: data.account_id as string,
       userId: data.user_id,
     });
-    if (!account) throw new Error('Conta não existe');
+    if (!account) throw new AppError('Account not found', 404);
 
     //validation from e to (De - Até)
     const from = data.from ? new Date(data.from) : undefined;
     const to = data.to ? new Date(data.to) : undefined;
-    if (from && Number.isNaN(from.getTime())) throw new Error('Data inválida');
-    if (to && Number.isNaN(to.getTime())) throw new Error('Data inválida');
-    if (from && to && from > to) throw new Error('Data inicial não pode ser maior que data final');
+    if (from && Number.isNaN(from.getTime())) throw new AppError('Invalid date', 400);
+    if (to && Number.isNaN(to.getTime())) throw new AppError('Invalid date', 400);
+    if (from && to && from > to) throw new AppError('Start date cannot be after end date', 400);
 
     const transaction = await transactionsRepository.getAllTransactions({
       user_id: data.user_id,
@@ -169,63 +170,66 @@ class TransactionService {
   }) => {
     // 1) description
     const description = data.description;
-    if (!description) throw new Error('Descrição é obrigatoria');
-    if (description.length > 255) throw new Error('Descrição muito longa');
+    if (!description) throw new AppError('Description is required', 400);
+    if (description.length > 255)
+      throw new AppError('Description must be at most 255 characters', 400);
 
     //2) kind and status
     const kind = data.kind as kindTransaction;
-    if (!VALID_KINDS.includes(kind as kindTransaction)) throw new Error('tipo inválido');
+    if (!VALID_KINDS.includes(kind as kindTransaction))
+      throw new AppError('Invalid transaction kind', 400);
 
     const status = (data.status as statusTransaction) ?? 'pendente';
-    if (!VALID_STATUS.includes(status as statusTransaction)) throw new Error('status inválido');
+    if (!VALID_STATUS.includes(status as statusTransaction))
+      throw new AppError('Invalid transaction status', 400);
 
     // 3) amount
     const amount = Number(data.amount);
-    if (!Number.isFinite(amount) || amount < 0) throw new Error('Valor inválido');
+    if (!Number.isFinite(amount) || amount < 0) throw new AppError('Invalid amount', 400);
     if (Math.round(amount * 100) / 100 !== amount)
-      throw new Error('Use no maximo duas casas decimais');
+      throw new AppError('Amount must have at most two decimal places', 400);
 
     //4) due_date: se não vier, usa hoje
     const due_date = data.due_date ? new Date(data.due_date) : new Date();
-    if (Number.isNaN(due_date.getTime())) throw new Error('Data inválida');
+    if (Number.isNaN(due_date.getTime())) throw new AppError('Invalid date', 400);
 
     //5) conta origem
     const accountOrigin = await accountRepository.findByIdAndUser({
       id: data.account_id,
       userId: data.user_id,
     });
-    if (!accountOrigin) throw new Error('Conta não encontrada');
+    if (!accountOrigin) throw new AppError('Account not found', 404);
 
     // 6) receita ou despesa
     if (kind !== 'transferencia') {
       if (data.destination_account_id)
-        throw new Error('Conta destino somente quando o tipo for tranferencia');
-      if (!data.category_id) throw new Error('Categoria é obrigatória');
+        throw new AppError('Destination account is only allowed for transfers', 400);
+      if (!data.category_id) throw new AppError('Category is required', 400);
 
       const category = await categoriesRepository.findAllCategories({
         id: data.category_id,
         user_id: data.user_id,
       });
-      if (!category) throw new Error('categoria não encontrada');
+      if (!category) throw new AppError('Category not found', 404);
 
       if (category[0].kind !== kind)
-        throw new Error('A categoria não é do mesmo tipo da transferencia');
+        throw new AppError('Category kind must match the transaction kind', 400);
     }
 
     // 7) transferencia
     if (kind === 'transferencia') {
       if (!data.destination_account_id)
-        throw new Error('Conta de destino obrigatoria para tipo "trasferencia"');
+        throw new AppError('Destination account is required for transfers', 400);
       if (data.destination_account_id === data.account_id)
-        throw new Error('Origem e destino devem ser diferentes');
+        throw new AppError('Source and destination accounts must be different', 400);
 
       const destination = await accountRepository.findByIdAndUser({
         id: data.destination_account_id,
         userId: data.user_id,
       });
-      if (!destination) throw new Error('Conta destino não encontrada');
+      if (!destination) throw new AppError('Destination account not found', 404);
       if (destination.currency !== accountOrigin.currency)
-        throw new Error('As contas têm moedas diferentes');
+        throw new AppError('Accounts have different currencies', 400);
     }
 
     // 8) gravar os dados

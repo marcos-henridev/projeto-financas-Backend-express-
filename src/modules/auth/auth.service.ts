@@ -2,13 +2,14 @@ import authRepository from './auth.repository';
 import bcrypt from 'bcrypt';
 import JWT from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import { AppError } from '../../errors/AppError';
 dotenv.config();
 class AuthService {
   register = async (data: { name: string; email: string; passaword: string }) => {
     // verificar se existe o email no banco
     const findUser = await authRepository.findUserByEmail(data.email);
     if (findUser) {
-      throw new Error('email já casdastrado');
+      throw new AppError('Email already registered', 409);
     }
 
     // *IMPORTANT gerar o hash de senha
@@ -28,11 +29,13 @@ class AuthService {
     const findUser = await authRepository.findUserByEmail(data.email);
 
     if (!findUser) {
-      throw new Error('USUARIO NAO ENCONTRADO');
+      throw new AppError('Invalid email or password', 401);
     }
 
     //COMPARAR SENHA HASH
     const compare = await bcrypt.compare(data.passaword, findUser.password_hash);
+
+    if (!compare) throw new AppError('Invalid email or password', 401);
 
     //GERA O JWT
     const token = JWT.sign({ signId: findUser.id }, process.env.JWT_SECRET as string, {

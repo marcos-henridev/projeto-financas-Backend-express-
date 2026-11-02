@@ -71,18 +71,18 @@ O servidor está com as rotas abaixo registradas no `src/server.ts`. Todas as
 rotas de `/users` e `/account` exigem autenticação do middleware
 `validation`.
 
-| Método | Caminho | Descrição |
-| ------ | ------- | --------- |
-| `POST` | `/auth/register` | Cadastra um novo usuário |
-| `POST` | `/auth/login` | Realiza login do usuário |
-| `GET` | `/users/me` | Retorna os dados do usuário autenticado |
-| `PATCH` | `/users/me` | Atualiza dados do usuário autenticado |
-| `DELETE` | `/users/me` | Desativa/soft delete do usuário autenticado |
-| `GET` | `/account` | Lista contas do usuário autenticado |
-| `POST` | `/account` | Cria uma nova conta para o usuário autenticado |
-| `GET` | `/account/:id` | Busca uma conta específica do usuário autenticado |
-| `PATCH` | `/account/:id` | Atualiza uma conta específica |
-| `DELETE` | `/account/:id` | Remove uma conta específica |
+| Método   | Caminho          | Descrição                                         |
+| -------- | ---------------- | ------------------------------------------------- |
+| `POST`   | `/auth/register` | Cadastra um novo usuário                          |
+| `POST`   | `/auth/login`    | Realiza login do usuário                          |
+| `GET`    | `/users/me`      | Retorna os dados do usuário autenticado           |
+| `PATCH`  | `/users/me`      | Atualiza dados do usuário autenticado             |
+| `DELETE` | `/users/me`      | Desativa/soft delete do usuário autenticado       |
+| `GET`    | `/account`       | Lista contas do usuário autenticado               |
+| `POST`   | `/account`       | Cria uma nova conta para o usuário autenticado    |
+| `GET`    | `/account/:id`   | Busca uma conta específica do usuário autenticado |
+| `PATCH`  | `/account/:id`   | Atualiza uma conta específica                     |
+| `DELETE` | `/account/:id`   | Remove uma conta específica                       |
 
 ### `POST /auth/register`
 

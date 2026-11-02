@@ -1,13 +1,12 @@
-import { type Request, type Response } from 'express';
+import { type NextFunction, type Request, type Response } from 'express';
 import transactionService from './transactions.service';
 import debug from 'debug';
-import { Result } from 'pg';
 
 // Cria a instância com a etiqueta
-const log = debug('app:router:transactions');
+const log = debug('app:geral');
 
 class TransactionController {
-  transctionPaid_at = async (req: Request<{ id: string }>, res: Response) => {
+  transctionPaid_at = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const result = await transactionService.addPaid_at({
@@ -15,21 +14,16 @@ class TransactionController {
         id_transaction: id,
       });
       res.status(200).json(result);
-    } catch (err) {
-      res.status(400).json({
-        erro: err instanceof Error ? err.message : 'Falha no servidor',
-      });
+    } catch (erro) {
+      next(erro);
     }
   };
-  NewUpdate = async (req: Request<{ id: string }>, res: Response) => {
+  NewUpdate = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
-      log('entrou no controller de transactions update');
-
       // id da transação
       const { id } = req.params;
       const { category_id, description, due_date } = req.body;
 
-      log('Body recebido %o', req.body);
       const result = await transactionService.editPatch({
         id,
         user_id: req.userId,
@@ -39,12 +33,11 @@ class TransactionController {
       });
       res.status(200).json(result);
     } catch (erro) {
-      log('Deu erro no catch: %s', erro);
-      res.status(400).json({ erro: erro instanceof Error ? erro.message : 'Erro na requisição' });
+      next(erro);
     }
   };
 
-  DeleteTransaction = async (req: Request<{ id: string }>, res: Response) => {
+  DeleteTransaction = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const result = await transactionService.DeletedTransaction({
@@ -53,24 +46,23 @@ class TransactionController {
       });
       res.status(204).send();
     } catch (erro) {
-      res.status(500).json({
-        erro: erro instanceof Error ? erro.message : 'Erro no servidor',
-      });
+      next(erro);
     }
   };
 
-  Get = async (req: Request<{ id: string }>, res: Response) => {
+  Get = async (req: Request<{ id: string }>, res: Response, next: NextFunction) => {
     try {
       const { id } = req.params;
       const result = await transactionService.GetUnique(req.userId, id);
       res.status(200).json(result);
     } catch (erro) {
-      res.status(400).json(erro);
+      next(erro);
     }
   };
 
-  GetAll = async (req: Request, res: Response) => {
+  GetAll = async (req: Request, res: Response, next: NextFunction) => {
     try {
+      log('iniciado o get');
       const { id, account_id, kind, status, from, to } = req.query;
       const result = await transactionService.GetAll({
         user_id: req.userId,
@@ -81,12 +73,13 @@ class TransactionController {
         from: typeof from === 'string' ? from : undefined,
         to: typeof to === 'string' ? to : undefined,
       });
+      log(req);
       res.status(200).json(result);
     } catch (erro) {
-      res.status(400).json(erro);
+      next(erro);
     }
   };
-  create = async (req: Request, res: Response) => {
+  create = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const {
         account_id,
@@ -112,9 +105,7 @@ class TransactionController {
       });
       res.status(201).json({ data: transaction });
     } catch (erro) {
-      return res.status(400).json({
-        erro: erro instanceof Error ? erro.message : 'Erro ao criar transação',
-      });
+      next(erro);
     }
   };
 }

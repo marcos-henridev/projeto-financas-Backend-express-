@@ -1,9 +1,10 @@
-import { type Response, type Request } from 'express';
+import { type NextFunction, type Response, type Request } from 'express';
 import userService from './user.service';
 import userRepository from './user.repository';
+import { AppError } from '../../errors/AppError';
 
 class UserController {
-  updateUniqueUser = async (req: Request, res: Response) => {
+  updateUniqueUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const { name, email } = req.body;
       const result = await userService.updateUser({
@@ -13,30 +14,27 @@ class UserController {
       });
       res.status(200).json(result);
       return;
-    } catch (error) {
-      console.error(`Error: ${error}`);
-      return res.status(401).json({ erro: 'Erro ao atualizar usuario' });
+    } catch (erro) {
+      next(erro);
     }
   };
-  getMeId = async (req: Request, res: Response) => {
+  getMeId = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = await userService.getMe(req.userId);
       return res.status(200).json(user);
     } catch (erro) {
-      console.error(`Error: ${erro}`);
-      return res.status(400).json({ erro: 'Error retrieving data' });
+      next(erro);
     }
   };
-  softDelete = async (req: Request, res: Response) => {
+  softDelete = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = await userRepository.findUserId({ id: req.userId });
-      if (!user) throw new Error('Usuario não encontrado');
+      if (!user) throw new AppError('User not found', 404);
 
       await userService.deleteId(req.userId);
       res.status(204).send();
     } catch (erro) {
-      console.error(`Erro ${erro} in try exclusion user `);
-      res.status(404).json({ erro: 'user notfound' });
+      next(erro);
     }
   };
 }
