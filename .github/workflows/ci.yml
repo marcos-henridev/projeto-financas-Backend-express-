@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   quality:
-    name: Format & typecheck
+    name: Format & build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
@@ -32,9 +32,11 @@ jobs:
       - run: npm run prisma:validate
       - run: npm run prisma:generate
       - run: npm run typecheck
+      - run: npm run build
 
   audit:
     name: Dependency audit
+    needs: quality
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
