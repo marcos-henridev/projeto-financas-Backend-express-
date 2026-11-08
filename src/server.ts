@@ -1,20 +1,24 @@
 import express from 'express';
+
+// middleware on validation and security
 import helmet from 'helmet';
+import corsMiddleware from './midllewares/cors.middleware';
+import validation from './midllewares/auth.midleware';
+import { erroMiddleware } from './errors/erro.middleware';
+
+//routes
 import authRouter from './modules/auth/auth.routes';
 import userRouter from './modules/user/user.router';
-import validation from './midllewares/auth.midleware';
 import accountRouter from './modules/accounts/accounts.router';
 import categorieRouter from './modules/categories/categories.router';
 import transactionRouter from './modules/transactions/transactions.router';
 import totalRouter from './modules/dashboard/dashboard.router';
-import { erroMiddleware } from './errors/erro.middleware';
-import corsMiddleware from './midllewares/cors.middleware';
 
 const app = express();
 app.use(helmet());
 app.use(corsMiddleware); /*middleware de cors (autorization de acesso)*/
 app.use(express.json());
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 app.use('/auth', authRouter);
 app.use('/users', validation, userRouter);
