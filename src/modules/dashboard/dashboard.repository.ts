@@ -49,7 +49,7 @@ class TotalRepository {
         description: i.description,
         amount: i.amount,
         due_date: i.due_date,
-        atrasada: i.due_date ? (i.due_date < hoje ? 'VENCIDO' : 'EM DIA') : 'SWEM VENCIMENTO',
+        atrasada: i.due_date ? (i.due_date < hoje ? 'VENCIDO' : 'EM DIA') : 'SEM VENCIMENTO',
       })),
     });
     return {
@@ -58,10 +58,7 @@ class TotalRepository {
     };
   };
 
-  getGastosPorCategoria = async (data: { user_id: string; start: string; end: string }) => {
-    const inicio = new Date(`${data.start}T00:00:00.000Z`);
-    const fim = new Date(`${data.end}T00:00:00.000Z`);
-
+  getGastosPorCategoria = async (data: { user_id: string; from: Date; to: Date }) => {
     const grupos = await prisma.transactions.groupBy({
       by: ['category_id'],
       where: {
@@ -69,12 +66,27 @@ class TotalRepository {
         kind: 'despesa',
         status: 'pago',
         deleted_at: null,
-        due_date: { gte: inicio, lte: fim },
+        paid_at: { gte: data.from, lte: data.to },
       },
       _sum: { amount: true },
       _count: { _all: true },
       orderBy: { _sum: { amount: 'desc' } },
     });
+
+    const ids = grupos
+      .map((g) => g.category_id)
+      .filter((id): id is string => id !== null && id !== undefined);
+
+    // sem filtro de is_active: gastos antigos de categoria desativada continuam com nome
+    const categorias = await prisma.categories.findMany({
+      where: {
+        user_id: data.user_id,
+        id: { in: ids },
+      },
+      select: { id: true, name: true, color: true, icon: true },
+    });
+
+    return { grupos, categorias };
   };
 }
 const dashboardRepository = new TotalRepository();

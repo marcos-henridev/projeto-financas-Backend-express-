@@ -1,4 +1,5 @@
 import express from 'express';
+import helmet from 'helmet';
 import authRouter from './modules/auth/auth.routes';
 import userRouter from './modules/user/user.router';
 import validation from './midllewares/auth.midleware';
@@ -9,6 +10,7 @@ import totalRouter from './modules/dashboard/dashboard.router';
 import { erroMiddleware } from './errors/erro.middleware';
 
 const app = express();
+app.use(helmet());
 app.use(express.json());
 const PORT = 3000;
 

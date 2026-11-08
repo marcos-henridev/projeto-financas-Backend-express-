@@ -44,6 +44,24 @@ class TotalController {
       next(err);
     }
   };
+
+  gastosPorCategoria = async (
+    req: Request<{}, {}, {}, Partial<UrlQuery>>,
+    res: Response,
+    next: NextFunction,
+  ) => {
+    try {
+      const { from, to } = req.query;
+      const result = await dashbordService.gastosPorCategoria({
+        user_id: req.userId,
+        from,
+        to,
+      });
+      res.status(200).json(result);
+    } catch (err) {
+      next(err);
+    }
+  };
 }
 const totalController = new TotalController();
 export default totalController;
