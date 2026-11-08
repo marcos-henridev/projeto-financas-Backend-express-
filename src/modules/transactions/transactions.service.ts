@@ -4,8 +4,6 @@ import transactionsRepository, {
   statusTransaction,
 } from './transactions.repository';
 import categoriesRepository from '../categories/categories.repository';
-import console, { log } from 'node:console';
-import { transaction_kind } from '../../../generated/prisma/enums';
 import { AppError } from '../../errors/AppError';
 
 const VALID_KINDS = ['receita', 'despesa', 'transferencia'];

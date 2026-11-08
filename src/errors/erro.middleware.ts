@@ -1,4 +1,4 @@
-import { Response, Request, NextFunction, response } from 'express';
+import { Response, Request, NextFunction } from 'express';
 import { AppError } from './AppError';
 
 export function erroMiddleware(erro: Error, req: Request, res: Response, next: NextFunction) {

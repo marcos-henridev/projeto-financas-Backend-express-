@@ -1,6 +1,5 @@
 import { type NextFunction, type Request, type Response } from 'express';
 import accountService from './accounts.service';
-import accountRepository from './accounts.repository';
 
 class AccountController {
   findAccountUrl = async (req: Request, res: Response, next: NextFunction) => {

@@ -1,5 +1,4 @@
 import { prisma } from '../../prisma';
-import { account_kind } from '../../../generated/prisma/enums';
 
 export type kindTransaction = 'receita' | 'despesa' | 'transferencia';
 export type statusTransaction = 'pendente' | 'pago' | 'vencido' | 'cancelado';

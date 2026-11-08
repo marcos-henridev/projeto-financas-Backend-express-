@@ -1,6 +1,4 @@
 import categoriesRepository, { type categorieKind } from '../categories/categories.repository';
-import { Result } from 'pg';
-import transactionsRepository from '../transactions/transactions.repository';
 import { prisma } from '../../prisma';
 import { AppError } from '../../errors/AppError';
 
